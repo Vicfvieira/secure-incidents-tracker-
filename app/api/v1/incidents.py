@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import math
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.crud.incident import (
@@ -11,8 +13,9 @@ from app.crud.incident import (
 )
 from app.database import get_db
 from app.deps import get_current_user, require_roles
+from app.models.incident import IncidentSeverity, IncidentStatus
 from app.models.user import User, UserRole
-from app.schemas.incident import IncidentCreate, IncidentRead, IncidentUpdate
+from app.schemas.incident import IncidentCreate, IncidentPage, IncidentRead, IncidentUpdate
 from app.schemas.incident_log import IncidentLogRead
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
@@ -36,12 +39,18 @@ def create(
     return create_incident(db, payload, current_user)
 
 
-@router.get("", response_model=list[IncidentRead])
+@router.get("", response_model=IncidentPage)
 def list_all(
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
+    severity: IncidentSeverity | None = Query(default=None),
+    status: IncidentStatus | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> list[IncidentRead]:
-    return list_incidents(db, current_user)
+) -> IncidentPage:
+    items, total = list_incidents(db, current_user, page=page, limit=limit, severity=severity, status=status)
+    total_pages = math.ceil(total / limit) if total else 0
+    return IncidentPage(items=items, total=total, page=page, limit=limit, total_pages=total_pages)
 
 
 @router.get("/{incident_id}", response_model=IncidentRead)

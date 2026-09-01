@@ -1,7 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.incident import Incident
+from app.models.incident import Incident, IncidentSeverity, IncidentStatus
 from app.models.incident_log import IncidentLog
 from app.models.user import User, UserRole
 from app.schemas.incident import IncidentCreate, IncidentUpdate
@@ -22,11 +22,33 @@ def create_incident(db: Session, payload: IncidentCreate, reporter: User) -> Inc
     return incident
 
 
-def list_incidents(db: Session, current_user: User) -> list[Incident]:
-    stmt = select(Incident).order_by(Incident.created_at.desc())
+def list_incidents(
+    db: Session,
+    current_user: User,
+    page: int = 1,
+    limit: int = 20,
+    severity: IncidentSeverity | None = None,
+    status: IncidentStatus | None = None,
+) -> tuple[list[Incident], int]:
+    filters = []
     if current_user.role == UserRole.REPORTER:
-        stmt = stmt.where(Incident.reporter_id == current_user.id)
-    return list(db.scalars(stmt))
+        filters.append(Incident.reporter_id == current_user.id)
+    if severity is not None:
+        filters.append(Incident.severity == severity)
+    if status is not None:
+        filters.append(Incident.status == status)
+
+    total = db.scalar(select(func.count()).select_from(Incident).where(*filters)) or 0
+
+    stmt = (
+        select(Incident)
+        .where(*filters)
+        .order_by(Incident.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
+    items = list(db.scalars(stmt))
+    return items, total
 
 
 def get_incident(db: Session, incident_id: str) -> Incident | None:

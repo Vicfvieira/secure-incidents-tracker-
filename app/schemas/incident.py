@@ -31,3 +31,11 @@ class IncidentRead(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class IncidentPage(BaseModel):
+    items: list[IncidentRead]
+    total: int
+    page: int
+    limit: int
+    total_pages: int

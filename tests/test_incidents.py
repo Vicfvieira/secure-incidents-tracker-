@@ -30,8 +30,10 @@ def test_reporter_only_sees_own_incidents(client, reporter_token, analyst_token)
 
     resp = client.get("/api/v1/incidents", headers=auth(reporter_token))
     assert resp.status_code == 200
-    titles = [i["title"] for i in resp.json()]
+    body = resp.json()
+    titles = [i["title"] for i in body["items"]]
     assert titles == [SAMPLE_INCIDENT["title"]]
+    assert body["total"] == 1
 
 
 def test_analyst_sees_all_incidents(client, reporter_token, analyst_token):
@@ -40,7 +42,9 @@ def test_analyst_sees_all_incidents(client, reporter_token, analyst_token):
 
     resp = client.get("/api/v1/incidents", headers=auth(analyst_token))
     assert resp.status_code == 200
-    assert len(resp.json()) == 2
+    body = resp.json()
+    assert len(body["items"]) == 2
+    assert body["total"] == 2
 
 
 def test_reporter_cannot_view_other_reporters_incident(client, reporter_token, admin_token):

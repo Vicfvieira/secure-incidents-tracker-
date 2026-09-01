@@ -42,9 +42,9 @@ automaticamente ao serem lidos pela aplicação. Ver `app/core/encryption.py`.
 | Método | Endpoint | Papéis | Descrição |
 |--------|----------|--------|-----------|
 | POST | `/api/v1/auth/register` | público | Cria uma conta (o primeiro usuário do sistema vira `ADMIN` automaticamente) |
-| POST | `/api/v1/auth/login` | público | Retorna um JWT |
+| POST | `/api/v1/auth/login` | público | Retorna um JWT (limitado a 5 tentativas/minuto por IP) |
 | POST | `/api/v1/incidents` | qualquer autenticado | Cria um incidente |
-| GET | `/api/v1/incidents` | qualquer autenticado | Lista incidentes (REPORTER vê apenas os seus) |
+| GET | `/api/v1/incidents` | qualquer autenticado | Lista incidentes de forma paginada (REPORTER vê apenas os seus) |
 | GET | `/api/v1/incidents/{id}` | qualquer autenticado | Detalhe de um incidente |
 | PATCH | `/api/v1/incidents/{id}` | ANALYST, ADMIN | Atualiza `status`/`severity` (gera log de auditoria) |
 | DELETE | `/api/v1/incidents/{id}` | ADMIN | Remove um incidente |
@@ -52,6 +52,29 @@ automaticamente ao serem lidos pela aplicação. Ver `app/core/encryption.py`.
 | GET | `/api/v1/users/me` | qualquer autenticado | Dados do usuário logado |
 | GET | `/api/v1/users` | ADMIN | Lista usuários |
 | POST | `/api/v1/users` | ADMIN | Cria um usuário com papel específico |
+
+#### Paginação e filtros em `GET /api/v1/incidents`
+
+Query params opcionais:
+
+| Param | Padrão | Limite | Descrição |
+|-------|--------|--------|-----------|
+| `page` | `1` | mínimo `1` | Página desejada |
+| `limit` | `20` | máximo `100` | Itens por página |
+| `severity` | — | `LOW`\|`MEDIUM`\|`HIGH`\|`CRITICAL` | Filtra por severidade |
+| `status` | — | `OPEN`\|`INVESTIGATING`\|`MITIGATED`\|`RESOLVED`\|`CLOSED` | Filtra por status |
+
+A resposta traz `items`, `total`, `page`, `limit` e `total_pages`:
+
+```json
+{
+  "items": [ ... ],
+  "total": 42,
+  "page": 1,
+  "limit": 20,
+  "total_pages": 3
+}
+```
 
 ### Exemplo — criar incidente
 
