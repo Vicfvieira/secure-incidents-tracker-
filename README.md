@@ -1,5 +1,7 @@
 # Secure Incidents Tracker
 
+[![CI](https://github.com/Vicfvieira/secure-incidents-tracker-/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Vicfvieira/secure-incidents-tracker-/actions/workflows/ci.yml)
+
 Aplicação full stack para registro, gestão e auditoria de incidentes de
 segurança da informação (phishing, vazamento de dados, malware, etc.),
 voltada para times de resposta a incidentes (Blue Team).
