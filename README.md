@@ -1,12 +1,13 @@
 # Secure Incidents Tracker
 
-Backend RESTful API para registro, gestão e auditoria de incidentes de
+Aplicação full stack para registro, gestão e auditoria de incidentes de
 segurança da informação (phishing, vazamento de dados, malware, etc.),
-voltado para times de resposta a incidentes (Blue Team).
+voltada para times de resposta a incidentes (Blue Team).
 
 ## Tecnologias
 
-- **Linguagem/Framework:** Python 3.11 + FastAPI
+- **Backend:** Python 3.11 + FastAPI
+- **Frontend:** React (Vite)
 - **Banco de Dados:** PostgreSQL
 - **ORM/Migrations:** SQLAlchemy 2.0 + Alembic
 - **Autenticação:** JWT com RBAC (controle de acesso baseado em papéis)
@@ -91,7 +92,7 @@ POST /api/v1/incidents
 
 ## Rodando localmente
 
-### Com Docker Compose
+### Com Docker Compose (backend + frontend + banco)
 
 ```bash
 cp .env.example .env
@@ -99,10 +100,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
-A API sobe em `http://localhost:8000`, com Swagger em
-`http://localhost:8000/api/v1/docs`.
+- API em `http://localhost:8000` (Swagger em `http://localhost:8000/api/v1/docs`)
+- Frontend em `http://localhost:4173`
 
-### Sem Docker
+### Backend sem Docker
 
 ```bash
 python3 -m venv .venv
@@ -117,6 +118,26 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
+
+## Frontend
+
+Frontend mínimo em React (Vite) que consome a API: tela de login/cadastro,
+lista de incidentes com filtros por severidade e status (badge colorido por
+severidade), formulário de criação de incidente e um gráfico de incidentes
+por severidade (Recharts).
+
+```bash
+cd frontend
+cp .env.example .env
+# edite VITE_API_BASE_URL se a API não estiver em http://localhost:8000/api/v1
+npm install
+npm run dev
+```
+
+A aplicação sobe em `http://localhost:5173`. Como o backend não expõe um
+endpoint de registro de usuários fora do bootstrap (o primeiro usuário
+cadastrado vira `ADMIN` automaticamente), a própria tela de login permite
+criar uma conta ("Não tem conta? Criar uma agora").
 
 ## Testes
 
@@ -144,6 +165,7 @@ app/
   main.py        # instância FastAPI e montagem dos routers
 alembic/         # migrations
 tests/           # suíte pytest
+frontend/        # aplicação React (Vite) que consome a API
 ```
 
 ## Contexto de Segurança
